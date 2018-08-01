@@ -5,21 +5,20 @@ FROM openjdk:8-jdk
 ENV ANDROID_COMPILE_SDK 24
 ENV ANDROID_BUILD_TOOLS 24.0.3
 
-# Install SDK deps
-RUN mkdir -p /opt/android/
-COPY android-sdk.tgz /opt/android/
+ENV ANDROID_HOME /opt/android/
+ENV PATH ${PATH}:/opt/android/platform-tools/:/${ANDROID_HOME}tools/
 
+# Install SDK deps
 RUN apt-get --quiet update --yes
 RUN apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1
 
 # Install android SDK
-RUN tar --extract --gzip --file=android-sdk.tgz
-RUN echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --filter android-${ANDROID_COMPILE_SDK}
-RUN echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --filter platform-tools
-RUN echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --filter build-tools-${ANDROID_BUILD_TOOLS}
-RUN echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --filter extra-google-m2repository
-RUN echo y | android-sdk-linux/tools/android --silent update sdk --no-ui --all --filter extra-android-m2repository
-
-
-ENV ANDROID_HOME /opt/android/
-ENV PATH ${PATH}:/opt/android/platform-tools/
+RUN mkdir -p ${ANDROID_HOME}
+COPY android-sdk.tgz ${ANDROID_HOME}
+RUN tar -C ${ANDROID_HOME} --extract --gzip --file=${ANDROID_HOME}android-sdk.tgz
+RUN mv ${ANDROID_HOME}android-sdk-linux/* ${ANDROID_HOME}
+RUN echo y | android --silent update sdk --no-ui --all --filter android-${ANDROID_COMPILE_SDK}
+RUN echo y | android --silent update sdk --no-ui --all --filter platform-tools
+RUN echo y | android --silent update sdk --no-ui --all --filter build-tools-${ANDROID_BUILD_TOOLS}
+RUN echo y | android --silent update sdk --no-ui --all --filter extra-google-m2repository
+RUN echo y | android --silent update sdk --no-ui --all --filter extra-android-m2repository
